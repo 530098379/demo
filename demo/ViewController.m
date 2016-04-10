@@ -86,14 +86,14 @@
         }
         [self presentViewController:controller animated:YES completion:nil];
     }else{
-        /*HUD = [[MBProgressHUD alloc] initWithView:self.tabBarController.view];
-         [tabBarViewController.view addSubview:HUD];
-         
-         HUD.delegate = self;
-         HUD.labelText = @"Loading";
-         
-         [HUD showWhileExecuting:@selector(myTask) onTarget:self withObject:nil animated:YES];
-         */
+        HUD = [[MBProgressHUD alloc] initWithView:self.view];
+        [self.view addSubview:HUD];
+        HUD.labelText = @"Test";
+        [HUD showAnimated:YES whileExecutingBlock:^{
+            [self doTask];
+        } completionBlock:^{
+            [HUD removeFromSuperview];
+        }];
     }
 }
 
@@ -116,5 +116,10 @@
         self.doneButton.backgroundColor = [UIColor groupTableViewBackgroundColor];
         self.doneButton.titleLabel.textColor = [UIColor lightGrayColor];
     }
+}
+
+-(void) doTask{
+    //你要进行的一些逻辑操作
+    sleep(10000);
 }
 @end
