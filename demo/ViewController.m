@@ -15,6 +15,9 @@
     FMDatabase *db;
     long long expectedLength;
     long long currentLength;
+    NSString *userTable;
+    NSString *userId ;
+    NSString *userName;
 }
 
 @property (weak, nonatomic) IBOutlet UITextField *nameText;
@@ -27,22 +30,24 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    NSString *userTable = @"M_USER";
-    NSString *userId = @"ID";
-    NSString *userName = @"NAME";
-    
+    userTable = @"M_USER";
+    userId = @"ID";
+    userName = @"PASSWORD";
+    NSString *doc=[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
+    NSString *fileName=[doc stringByAppendingPathComponent:@"demeDB.sqlite"];
     // 创建DB
-    db = [FMDatabase databaseWithPath:@"/tmp/demeDB.db"];
+    db = [FMDatabase databaseWithPath:fileName];
     if ([db open]) {
         // 创建用户表
-        if ([db tableExists:userTable]) {
+        if (![db tableExists:userTable]) {
             [db executeUpdate:[NSString stringWithFormat:@"create table %@(%@ text,%@ text)",
                                userTable,userId,userName]];
+            NSString *insertSql1= [NSString stringWithFormat:
+                                   @"INSERT INTO '%@' ('%@', '%@') VALUES ('%@', '%@')",
+                                   userTable, userId, userName, @"admin", @"123456"];
+            [db executeUpdate:insertSql1];
+
         }
-        NSString *insertSql1= [NSString stringWithFormat:
-                               @"INSERT INTO '%@' ('%@', '%@') VALUES ('%@', '%@')",
-                               userTable, userId, userName, @"admin", @"123456"];
-        [db executeUpdate:insertSql1];
         [db close];
     }
 }
@@ -52,39 +57,20 @@
     // Dispose of any resources that can be recreated.
 }
 - (IBAction)doneSubmit:(UIButton *)sender {
-    /*//NSString *userTable = @"M_USER";
-    //NSString *userId = @"ID";
-    //NSString *userName = @"NAME";
 
+    BOOL extis = NO;
     if ([db open]) {
         NSString * sql = [NSString stringWithFormat:
-                          @"SELECT * FROM %@",userTable];
+                          @"SELECT * FROM %@ WHERE ID = '%@' and PASSWORD = '%@'",userTable,_nameText.text, _passWordText.text];
         FMResultSet * rs = [db executeQuery:sql];
-        while (![rs next]) {
-            //int Id = [rs intForColumn:userId];
-            //NSString * name = [rs stringForColumn:userName];
-            UIAlertController *controller =
-            [UIAlertController alertControllerWithTitle:@"登陆失败"
-                                                message:nil preferredStyle:UIAlertControllerStyleActionSheet];
-            
-            UIPopoverPresentationController *ppc = controller.popoverPresentationController;
-            if (ppc != nil) {
-                ppc.sourceView = sender;
-                ppc.sourceRect = sender.bounds;
-            }
-            [self presentViewController:controller animated:YES completion:nil];
+
+        if ([rs next]) {
+            extis = YES;
         }
         [db close];
     }
-    HUD = [[MBProgressHUD alloc] initWithView:self.tabBarController.view];
-    [tabBarViewController.view addSubview:HUD];
-    
-    HUD.delegate = self;
-    HUD.labelText = @"Loading";
-    
-    [HUD showWhileExecuting:@selector(myTask) onTarget:self withObject:nil animated:YES];
-    */
-    if (true) {
+  
+    if (!extis) {
         UIAlertController *controller =
         [UIAlertController alertControllerWithTitle:@"帐号或密码错误，请重新填写。"
                                             message:nil preferredStyle:UIAlertControllerStyleAlert];
@@ -100,7 +86,14 @@
         }
         [self presentViewController:controller animated:YES completion:nil];
     }else{
-        
+        /*HUD = [[MBProgressHUD alloc] initWithView:self.tabBarController.view];
+         [tabBarViewController.view addSubview:HUD];
+         
+         HUD.delegate = self;
+         HUD.labelText = @"Loading";
+         
+         [HUD showWhileExecuting:@selector(myTask) onTarget:self withObject:nil animated:YES];
+         */
     }
 }
 
